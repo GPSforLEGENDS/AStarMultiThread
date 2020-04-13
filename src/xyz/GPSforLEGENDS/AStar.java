@@ -1,5 +1,7 @@
 package xyz.GPSforLEGENDS;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,7 +42,7 @@ public class AStar {
      * @param startY
      * @param endX
      * @param endY
-     * @return A list containing the Nodes ordered from start to end. Null if no path was found or the points are outside of the grid
+     * @return A list containing the Nodes ordered from start to end. empty if no path was found or the points are outside of the grid
      * @exception IllegalArgumentException if coordinates are outside of the grid or are not traversable
      */
     public List<Node> findPath(int startX, int startY, int endX, int endY){
@@ -48,13 +50,32 @@ public class AStar {
         Node start = grid.getNode(startX,startY);
         Node end = grid.getNode(endX,endY);
 
+        List<Node> path = new ArrayList<>();
+
         if(start == null || end == null) throw new IllegalArgumentException("The start or end coordinates are outside of the grid");
 
         if(!start.isTraversable() || !end.isTraversable()) throw new IllegalArgumentException("The start or end node is not traversable");
 
+        if(parallel){
+            //TODO parallel stuff
+        }
+        else{
+            PathWorker worker = new PathWorker(grid,start,end,true);
+            //just call run, since it is one thread anyways;
+            worker.run();
 
+            if(end.getPredecessor() != null){
+                path.add(end);
+                Node current = end;
+                do{
+                    current = current.getPredecessor();
+                    path.add(current);
+                } while(current.getPredecessor() != null);
+            }
+            Collections.reverse(path);
+        }
 
-        return null;
+        return path;
     }
 
 }

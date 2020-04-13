@@ -9,8 +9,9 @@ public class Node {
 
     private int x;
     private int y;
+    private double costToReach;
 
-    private Node succcessor;
+    private Node predecessor;
 
     private int status;
 
@@ -20,9 +21,9 @@ public class Node {
         this.traversable = traversable;
         this.x = x;
         this.y = y;
-        status = 0;
         //a pixel can be surrounded by a maximum of 8 others
         neighbours = new ArrayList<>(8);
+        costToReach = Double.MAX_VALUE;
     }
 
     public boolean isTraversable() {
@@ -37,12 +38,12 @@ public class Node {
         return y;
     }
 
-    public Node getSucccessor(){
-        return succcessor;
+    public Node getPredecessor(){
+        return predecessor;
     }
 
-    public void setSucccessor(Node n){
-        this.succcessor = n;
+    public void setPredecessor(Node n){
+        this.predecessor = n;
     }
 
     /**
@@ -57,10 +58,10 @@ public class Node {
     }
 
     /**
-     * setter for the status
-     * 0 = not explored
-     * 1 = explored from start point
-     * 2 = explored from endpoint
+     * setter for the status<br>
+     * 0 = not explored<br>
+     * 1 = explored from start point<br>
+     * 2 = explored from endpoint<br>
      * @return
      */
     public synchronized void setStatus(int status) {
@@ -75,11 +76,35 @@ public class Node {
         this.neighbours = neighbours;
     }
 
+    /**
+     * adds the Node to the neighbour list, BUT only if the node is traversable!!!
+     * @param node
+     */
     public void addNeighbour(Node node){
-        neighbours.add(node);
+        if(node.isTraversable()) neighbours.add(node);
     }
 
     public void removeNeighbour(Node node){
         neighbours.remove(node);
+    }
+
+    public void setCostToReach(double costToReach) { this.costToReach = costToReach; }
+
+    public double getCostToReach() { return this.costToReach; }
+
+    @Override
+    public boolean equals(Object o){
+
+        if(o == this){
+            return true;
+        }
+
+        if(!(o instanceof  Node)){
+            return false;
+        }
+
+        Node n = (Node) o;
+
+        return (n.getX() == x && n.getY() == y);
     }
 }
