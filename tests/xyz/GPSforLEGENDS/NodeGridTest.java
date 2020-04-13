@@ -13,12 +13,12 @@ class NodeGridTest {
     private static NodeGrid nodeGrid;
 
     @BeforeAll
-    public static void initialize() throws IOException {
+    static void setup() throws IOException {
         nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/basic.png")));
     }
 
     @Test
-    public void testNodeGridCreation() throws Exception {
+    void testNodeGridCreation() {
         assertEquals(271,nodeGrid.getWidth());
         assertEquals(192,nodeGrid.getHeight());
 
@@ -33,7 +33,7 @@ class NodeGridTest {
     }
 
     @Test
-    public void testNodeTraversable(){
+    void testNodeTraversable(){
         assertTrue(nodeGrid.getNode(0,0).isTraversable());
         assertTrue(nodeGrid.getNode(270,191).isTraversable());
 
@@ -43,7 +43,7 @@ class NodeGridTest {
     }
 
     @Test
-    public void testNodeNeighbours(){
+    void testNodeNeighbours(){
         //top left (corner) test
         Node n = nodeGrid.getNode(0,0);
 
