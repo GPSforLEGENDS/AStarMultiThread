@@ -28,14 +28,14 @@ class PathWorker extends Thread{
      * @param endY
      * @param isStart true if this is the 'real' start point
      */
-    public PathWorker(NodeGrid grid, int startX, int startY, int endX, int endY, boolean isStart){
+    PathWorker(NodeGrid grid, int startX, int startY, int endX, int endY, boolean isStart){
         this.grid = grid;
         this.startNode = grid.getNode(startX,startY);
         this.endNode = grid.getNode(endX,endY);
         this.isStart = isStart;
     }
 
-    public PathWorker(NodeGrid grid, Node start, Node end, boolean isStart){
+    PathWorker(NodeGrid grid, Node start, Node end, boolean isStart){
         this.grid = grid;
         this.startNode = start;
         this.endNode = end;
@@ -56,16 +56,17 @@ class PathWorker extends Thread{
 
         do{
             Node currentNode = openList.poll();
+            synchronized (currentNode) {
+                if (currentNode.equals(endNode)) return;
+                if(currentNode.getStatus() == 1 || currentNode.getStatus() == 2) return;
 
-            if(currentNode.equals(endNode)) return;
+                //setting the status
+                if (isStart) currentNode.setStatus(1);
+                else currentNode.setStatus(2);
 
-            //setting the status
-            if(isStart) currentNode.setStatus(1);
-            else currentNode.setStatus(2);
-
-            //if they met stop
-            if(expandNode(currentNode)) return;
-
+                //if they met stop
+                if (expandNode(currentNode)) return;
+            }
         }while(!openList.isEmpty());
 
         noPathFound();
@@ -97,15 +98,17 @@ class PathWorker extends Thread{
                 if(neighbour.getStatus() == 2) continue;
             }
 
-            double costToReach = currentNode.getCostToReach() + calculateCostToReach(currentNode,neighbour);
+            synchronized (neighbour) {
+                double costToReach = currentNode.getCostToReach() + calculateCostToReach(currentNode, neighbour);
 
-            if(openList.contains(neighbour) && costToReach >= neighbour.getCostToReach()) continue;;
+                if (openList.contains(neighbour) && costToReach >= neighbour.getCostToReach()) continue;
 
-            neighbour.setPredecessor(currentNode);
-            neighbour.setCostToReach(costToReach);
+                neighbour.setPredecessor(currentNode);
+                neighbour.setCostToReach(costToReach);
 
-            openList.remove(neighbour);
-            openList.add(neighbour);
+                openList.remove(neighbour);
+                openList.add(neighbour);
+            }
         }
 
         return false;
@@ -164,5 +167,13 @@ class PathWorker extends Thread{
         int y = Math.abs(n.getY() - endNode.getY());
 
         return Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
+    }
+
+    Node getBridgeFrom(){
+        return from;
+    }
+
+    Node getBridgeTo(){
+        return to;
     }
 }

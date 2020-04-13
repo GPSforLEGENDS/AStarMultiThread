@@ -57,13 +57,50 @@ public class AStar {
         if(!start.isTraversable() || !end.isTraversable()) throw new IllegalArgumentException("The start or end node is not traversable");
 
         if(parallel){
-            //TODO parallel stuff
+            PathWorker workerFromStart = new PathWorker(grid,start,end,true);
+            PathWorker workerFromEnd = new PathWorker(grid,end,start,false);
+
+            workerFromStart.start();
+            workerFromEnd.start();
+
+            Node bridgeA;
+            Node bridgeB;
+
+            //loop to wait for results
+            while(true){
+                if(!workerFromStart.isAlive()){
+                    bridgeA = workerFromStart.getBridgeFrom();
+                    bridgeB = workerFromStart.getBridgeTo();
+                    break;
+                }
+                else if(!workerFromEnd.isAlive()){
+                    bridgeA = workerFromEnd.getBridgeTo();
+                    bridgeB = workerFromStart.getBridgeFrom();
+                    break;
+                }
+                try {
+                    wait(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            //TODO backtracking
+            //there is a path
+            if(bridgeA != null){
+                //TODO backtracking from the bridges
+            }
+            else if(end.getPredecessor() != null){
+                //TODO normal backtracking from the end
+            }
         }
         else{
+            //setting up the predecessors
             PathWorker worker = new PathWorker(grid,start,end,true);
             //just call run, since it is one thread anyways;
             worker.run();
 
+            //backtracking from end node
             if(end.getPredecessor() != null){
                 path.add(end);
                 Node current = end;
