@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AStarTest {
 
@@ -44,5 +45,16 @@ class AStarTest {
         List<Node> path = aStar.findPath(0,0,19,19);
 
         assertEquals(38,path.size());
+    }
+
+    @Test
+    void findPathOnPrisonGrid() throws IOException {
+        NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/prison.png")));
+
+        AStar aStar = new AStar(nodeGrid);
+
+        List<Node> path = aStar.findPath(0,0,19,19);
+
+        assertTrue(path.isEmpty());
     }
 }
