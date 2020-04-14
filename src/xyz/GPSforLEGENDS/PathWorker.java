@@ -26,7 +26,7 @@ class PathWorker extends Thread{
      * @param startY
      * @param endX
      * @param endY
-     * @param isStart true if this is the 'real' start point
+     * @param isStart true if this is the 'real' (which means not the endpoint that is used as the start point for the second pathfinder) start point
      */
     PathWorker(NodeGrid grid, int startX, int startY, int endX, int endY, boolean isStart){
         this.grid = grid;
@@ -35,6 +35,13 @@ class PathWorker extends Thread{
         this.isStart = isStart;
     }
 
+    /**
+     * COnstructor
+     * @param grid
+     * @param start
+     * @param end
+     * @param isStart true if this is the 'real' (which means not the endpoint that is used as the start point for the second pathfinder) start point
+     */
     PathWorker(NodeGrid grid, Node start, Node end, boolean isStart){
         this.grid = grid;
         this.startNode = start;
@@ -58,15 +65,22 @@ class PathWorker extends Thread{
             Node currentNode = openList.poll();
             synchronized (currentNode) {
                 if (currentNode.equals(endNode)) return;
-                if(currentNode.getStatus() == 1 || currentNode.getStatus() == 2) return;
+                //check of the other pathfinder already worked on this node
+                //TODO find the bridge
+                if (currentNode.getStatus() == 1){
+
+                }
+                else if(currentNode.getStatus() == 2){
+
+                }
 
                 //setting the status
                 if (isStart) currentNode.setStatus(1);
                 else currentNode.setStatus(2);
-
-                //if they met stop
-                if (expandNode(currentNode)) return;
             }
+                //explore neighbours and stop if the pathfinder met each other
+            if (expandNode(currentNode)) return;
+
         }while(!openList.isEmpty());
 
         noPathFound();
@@ -79,26 +93,30 @@ class PathWorker extends Thread{
      */
     private boolean expandNode(Node currentNode) {
         for(Node neighbour : currentNode.getNeighbours()){
+            synchronized (neighbour) {
             if(isStart){
-                if(neighbour.getStatus() == 2){
+
+                //pathfinder from the start found the other
+                /*if(neighbour.getStatus() == 2){
                     from = currentNode;
                     to = neighbour;
                     return true;
-                }
+                }*/
 
                 if(neighbour.getStatus() == 1) continue;
             }
             else{
-                if(neighbour.getStatus() == 1){
+                //pathfinder from the end found the other
+                /*if(neighbour.getStatus() == 1){
                     from = currentNode;
                     to = neighbour;
                     return true;
-                }
+                }*/
 
                 if(neighbour.getStatus() == 2) continue;
             }
 
-            synchronized (neighbour) {
+
                 double costToReach = currentNode.getCostToReach() + calculateCostToReach(currentNode, neighbour);
 
                 if (openList.contains(neighbour) && costToReach >= neighbour.getCostToReach()) continue;
@@ -106,6 +124,7 @@ class PathWorker extends Thread{
                 neighbour.setPredecessor(currentNode);
                 neighbour.setCostToReach(costToReach);
 
+                //remove and add since the order might have changed
                 openList.remove(neighbour);
                 openList.add(neighbour);
             }
