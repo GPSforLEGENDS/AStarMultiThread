@@ -53,7 +53,7 @@ public class Node {
      * 2 = explored from endpoint
      * @return
      */
-    public synchronized int getStatus() {
+    public int getStatus() {
         return status;
     }
 
@@ -64,7 +64,7 @@ public class Node {
      * 2 = explored from endpoint<br>
      * @return
      */
-    public synchronized void setStatus(int status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
