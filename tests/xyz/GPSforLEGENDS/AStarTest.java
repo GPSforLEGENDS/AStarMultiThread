@@ -57,4 +57,51 @@ class AStarTest {
 
         assertTrue(path.isEmpty());
     }
+
+    @Test
+    void findPathMultiThreadOnClearGrid() throws IOException {
+        NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/empty.png")));
+
+        AStar aStar = new AStar(nodeGrid, true);
+
+        List<Node> path = aStar.findPath(0,0,99,99);
+
+        assertEquals(100,path.size());
+        for(int i = 1; i < 100; i++){
+            assertEquals(nodeGrid.getNode(i-1, i-1), path.get(i-1));
+        }
+    }
+
+    @Test
+    void findPathMultiThreadOnOnePathGrid() throws IOException {
+        NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/onePath.png")));
+
+        AStar aStar = new AStar(nodeGrid, true);
+
+        List<Node> path = aStar.findPath(0,0,19,19);
+
+        assertEquals(38,path.size());
+    }
+
+    @Test
+    void findPathMultiThreadOnMidLineGrid() throws IOException {
+        NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/midLine.png")));
+
+        AStar aStar = new AStar(nodeGrid, true);
+
+        List<Node> path = aStar.findPath(0,0,19,19);
+
+        assertEquals(38,path.size());
+    }
+
+    @Test
+    void findPathMultiThreadOnPrisonGrid() throws IOException {
+        NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/prison.png")));
+
+        AStar aStar = new AStar(nodeGrid, true);
+
+        List<Node> path = aStar.findPath(0,0,19,19);
+
+        assertTrue(path.isEmpty());
+    }
 }
