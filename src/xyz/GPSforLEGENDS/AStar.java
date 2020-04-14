@@ -56,6 +56,7 @@ public class AStar {
 
         if(!start.isTraversable() || !end.isTraversable()) throw new IllegalArgumentException("The start or end node is not traversable");
 
+        //2 threads
         if(parallel){
             PathWorker workerFromStart = new PathWorker(grid,start,end,true);
             PathWorker workerFromEnd = new PathWorker(grid,end,start,false);
@@ -75,25 +76,43 @@ public class AStar {
                 }
                 else if(!workerFromEnd.isAlive()){
                     bridgeA = workerFromEnd.getBridgeTo();
-                    bridgeB = workerFromStart.getBridgeFrom();
+                    bridgeB = workerFromEnd.getBridgeFrom();
                     break;
-                }
-                try {
-                    wait(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
 
-            //TODO backtracking
-            //there is a path
+            //is there a path?
             if(bridgeA != null){
-                //TODO backtracking from the bridges
+                path.add(bridgeA);
+                Node current = bridgeA;
+                do{
+                    current = current.getPredecessor();
+                    path.add(current);
+                } while(current.getPredecessor() != null);
+
+                Collections.reverse(path);
+
+                path.add(bridgeB);
+                current = bridgeB;
+
+                do{
+                    current = current.getPredecessor();
+                    path.add(current);
+                } while(current.getPredecessor() != null);
             }
             else if(end.getPredecessor() != null){
-                //TODO normal backtracking from the end
+                //normal backtracking from the end
+                path.add(end);
+                Node current = end;
+                do{
+                    current = current.getPredecessor();
+                    path.add(current);
+                } while(current.getPredecessor() != null);
+
+                Collections.reverse(path);
             }
         }
+        //run in main thread
         else{
             //setting up the predecessors
             PathWorker worker = new PathWorker(grid,start,end,true);
