@@ -1,8 +1,10 @@
 package xyz.GPSforLEGENDS;
 
+import java.io.File;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class PathWorker extends Thread{
 
@@ -18,6 +20,9 @@ class PathWorker extends Thread{
     //sorted by the estimated lowest cost.
     //for more infos look at inner class SortByDistance
     Queue<Node> openList = new PriorityQueue<>(new SortByDistance());
+
+    //flag to indicate if one pathfinder found the other
+    private static AtomicBoolean foundFlag = new AtomicBoolean(false);
 
     /**
      * Constructor
@@ -58,30 +63,32 @@ class PathWorker extends Thread{
      * Stops when either the end node is found OR if the pathfinder finds a node that is already closed by the other pathfinder (only if parallel is true in AStar)
      */
     private void aStarPathfinding(){
-        startNode.setCostToReach(0);
+        startNode.setCostToReach(0, isStart);
         openList.add(startNode);
 
-        do{
-            Node currentNode = openList.poll();
-            synchronized (currentNode) {
-                if (currentNode.equals(endNode)) return;
-                //check of the other pathfinder already worked on this node
-                //TODO find the bridge
-                if (currentNode.getStatus() == 1){
+        do {
+            if (foundFlag.compareAndSet(false, false)) {
+                Node currentNode = openList.poll();
+                synchronized (currentNode) {
+                    if (currentNode.equals(endNode)) return;
+                    //check if the other pathfinder already worked on this node
+                    if (currentNode.getStatus() == 1 || currentNode.getStatus() == 2) {
+                        if (foundFlag.compareAndSet(false, true)) {
+                            findBridge(currentNode);
+                        }
+                        return;
+                    }
 
+                    //setting the status
+                    if (isStart) currentNode.setStatus(1);
+                    else currentNode.setStatus(2);
                 }
-                else if(currentNode.getStatus() == 2){
-
-                }
-
-                //setting the status
-                if (isStart) currentNode.setStatus(1);
-                else currentNode.setStatus(2);
-            }
                 //explore neighbours and stop if the pathfinder met each other
-            if (expandNode(currentNode)) return;
-
-        }while(!openList.isEmpty());
+                expandNode(currentNode);
+            }
+            //stop working if the foundFlag is set
+            else return;
+        } while (!openList.isEmpty()) ;
 
         noPathFound();
     }
@@ -91,46 +98,95 @@ class PathWorker extends Thread{
      * @param currentNode
      * @return
      */
-    private boolean expandNode(Node currentNode) {
+    private void expandNode(Node currentNode) {
         for(Node neighbour : currentNode.getNeighbours()){
-            synchronized (neighbour) {
-            if(isStart){
+            //stop working as soon as they found each other
+            if(foundFlag.compareAndSet(false,false)) {
+                synchronized (neighbour) {
+                    if (isStart) {
+                        if (neighbour.getStatus() == 1) continue;
+                    } else {
+                        if (neighbour.getStatus() == 2) continue;
+                    }
 
-                //pathfinder from the start found the other
-                /*if(neighbour.getStatus() == 2){
-                    from = currentNode;
-                    to = neighbour;
-                    return true;
-                }*/
+                    double costToReach = currentNode.getCostToReach(isStart) + calculateCostToReach(currentNode, neighbour);
 
-                if(neighbour.getStatus() == 1) continue;
+                    if (openList.contains(neighbour) && costToReach >= neighbour.getCostToReach(isStart)) continue;
+
+                    double oldCost = neighbour.getCostToReach(isStart);
+
+                    neighbour.setCostToReach(costToReach, isStart);
+
+                    //remove and add since the order might have changed
+                    openList.remove(neighbour);
+                    openList.add(neighbour);
+
+                    if(neighbour.getStatus() == 1 || neighbour.getStatus() == 2) neighbour.setCostToReach(oldCost,isStart);
+                    else neighbour.setPredecessor(currentNode);
+                }
             }
-            else{
-                //pathfinder from the end found the other
-                /*if(neighbour.getStatus() == 1){
-                    from = currentNode;
-                    to = neighbour;
-                    return true;
-                }*/
+            //stop working if the foundFlag is set
+            else return;
+        }
+    }
 
-                if(neighbour.getStatus() == 2) continue;
-            }
-
-
-                double costToReach = currentNode.getCostToReach() + calculateCostToReach(currentNode, neighbour);
-
-                if (openList.contains(neighbour) && costToReach >= neighbour.getCostToReach()) continue;
-
-                neighbour.setPredecessor(currentNode);
-                neighbour.setCostToReach(costToReach);
-
-                //remove and add since the order might have changed
-                openList.remove(neighbour);
-                openList.add(neighbour);
+    /**
+     * finds the bridge from the currentNode to the neighbour node of the opposite status AND the shortest costToReach
+     * @param currentNode
+     */
+    private void findBridge(Node currentNode) {
+        Node shortest = null;
+        Visualizer.safeNodeGridImageToFile(grid,new File("D:\\RestAPI\\demo\\AStarMultiThread\\tests\\xyz\\GPSforLEGENDS\\resources", "test.png"));
+        if(currentNode.getStatus() == 1){
+            for(Node neighbour : currentNode.getNeighbours()){
+                if(neighbour.getStatus() == 2){
+                    if(shortest == null || shortest.getCostToReach(isStart) > neighbour.getCostToReach(isStart)){
+                        shortest = neighbour;
+                    }
+                }
             }
         }
 
-        return false;
+        else if(currentNode.getStatus() == 2){
+            for(Node neighbour : currentNode.getNeighbours()){
+                if(neighbour.getStatus() == 1){
+                    if(shortest == null || shortest.getCostToReach(isStart) > neighbour.getCostToReach(isStart)){
+                        shortest = neighbour;
+                    }
+                }
+            }
+        }
+
+        from = shortest;
+        to = currentNode;
+
+        repairBridge();
+    }
+
+    /**
+     * repairs the bridge in case that the predecessors are wrong because of multithreading
+     */
+    private void repairBridge() {
+        Node shortest = null;
+        for(Node neighbour : from.getNeighbours()){
+            if(neighbour.getStatus() == from.getStatus()){
+                if(shortest == null || shortest.getCostToReach(isStart) > neighbour.getCostToReach(isStart)){
+                    shortest = neighbour;
+                }
+            }
+        }
+        from.setPredecessor(shortest);
+        shortest = null;
+
+        for(Node neighbour : to.getNeighbours()){
+            if(neighbour.getStatus() == to.getStatus()){
+                if(shortest == null || shortest.getCostToReach(!isStart) > neighbour.getCostToReach(!isStart)){
+                    shortest = neighbour;
+                }
+            }
+        }
+        to.setPredecessor(shortest);
+        double x = to.getCostToReach(!isStart);
     }
 
     /**
@@ -165,8 +221,8 @@ class PathWorker extends Thread{
         @Override
         public int compare(Node a, Node b) {
 
-            double distanceA = a.getCostToReach() + calculateHeuristicCost(a);
-            double distanceB = b.getCostToReach() + calculateHeuristicCost(b);
+            double distanceA = a.getCostToReach(isStart) + calculateHeuristicCost(a);
+            double distanceB = b.getCostToReach(isStart) + calculateHeuristicCost(b);
 
             double compared = distanceA - distanceB;
 

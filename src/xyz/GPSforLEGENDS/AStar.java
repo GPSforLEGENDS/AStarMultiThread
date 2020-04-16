@@ -64,20 +64,22 @@ public class AStar {
             workerFromStart.start();
             workerFromEnd.start();
 
-            Node bridgeA;
-            Node bridgeB;
+            Node bridgeA = null;
+            Node bridgeB = null;
 
             //loop to wait for results
             while(true){
                 if(!workerFromStart.isAlive()){
                     bridgeA = workerFromStart.getBridgeFrom();
                     bridgeB = workerFromStart.getBridgeTo();
-                    break;
+                    if(!workerFromEnd.isAlive() && workerFromEnd.getBridgeFrom() == null && bridgeA == null && bridgeB == null) break;
+                    if(bridgeA != null && bridgeB != null) break;
                 }
-                else if(!workerFromEnd.isAlive()){
+                if(!workerFromEnd.isAlive()){
                     bridgeA = workerFromEnd.getBridgeTo();
                     bridgeB = workerFromEnd.getBridgeFrom();
-                    break;
+                    if(!workerFromStart.isAlive() && workerFromStart.getBridgeFrom() == null && bridgeA == null && bridgeB == null) break;
+                    if(bridgeA != null && bridgeB != null) break;
                 }
             }
 

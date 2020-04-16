@@ -9,7 +9,7 @@ public class Node {
 
     private int x;
     private int y;
-    private double costToReach;
+    private double[] costToReach = new double[2];
 
     private Node predecessor;
 
@@ -23,7 +23,8 @@ public class Node {
         this.y = y;
         //a pixel can be surrounded by a maximum of 8 others
         neighbours = new ArrayList<>(8);
-        costToReach = Double.MAX_VALUE;
+        costToReach[0] = Double.MAX_VALUE;
+        costToReach[1] = Double.MAX_VALUE;
     }
 
     public boolean isTraversable() {
@@ -88,9 +89,15 @@ public class Node {
         neighbours.remove(node);
     }
 
-    public void setCostToReach(double costToReach) { this.costToReach = costToReach; }
+    public void setCostToReach(double costToReach, boolean isStart) {
+        if(isStart) this.costToReach[0] = costToReach;
+        else this.costToReach[1] = costToReach;
+    }
 
-    public double getCostToReach() { return this.costToReach; }
+    public double getCostToReach(boolean isStart) {
+        if(isStart) return this.costToReach[0];
+        else return this.costToReach[1];
+    }
 
     @Override
     public boolean equals(Object o){
