@@ -34,6 +34,17 @@ class AStarTest {
         List<Node> path = aStar.findPath(0,0,19,19);
 
         assertEquals(38,path.size());
+
+        int width = 0;
+        int height = 0;
+
+        for(width = 0; width < 19; width++){
+            assertEquals(nodeGrid.getNode(width,height), path.get(width));
+        }
+
+        for(height = 1; height < 20; height++){
+            assertEquals(nodeGrid.getNode(width,height), path.get(18 + height));
+        }
     }
 
     @Test
@@ -45,6 +56,28 @@ class AStarTest {
         List<Node> path = aStar.findPath(0,0,19,19);
 
         assertEquals(38,path.size());
+
+        int width = 0;
+        int height = 0;
+
+        if(path.get(1).getX() == 1) {
+            for (width = 0; width < 19; width++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(width));
+            }
+
+            for (height = 1; height < 20; height++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(18 + height));
+            }
+        }
+        else{
+            for (height = 0; height < 19; height++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(height));
+            }
+
+            for (width = 1; width < 20; width++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(18 + width));
+            }
+        }
     }
 
     @Test
@@ -81,6 +114,17 @@ class AStarTest {
         List<Node> path = aStar.findPath(0,0,19,19);
 
         assertEquals(38,path.size());
+
+        int width = 0;
+        int height = 0;
+
+        for(width = 0; width < 19; width++){
+            assertEquals(nodeGrid.getNode(width,height), path.get(width));
+        }
+
+        for(height = 1; height < 20; height++){
+            assertEquals(nodeGrid.getNode(width,height), path.get(18 + height));
+        }
     }
 
     @Test
@@ -92,6 +136,28 @@ class AStarTest {
         List<Node> path = aStar.findPath(0,0,19,19);
 
         assertEquals(38,path.size());
+
+        int width = 0;
+        int height = 0;
+
+        if(path.get(1).getX() == 1) {
+            for (width = 0; width < 19; width++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(width));
+            }
+
+            for (height = 1; height < 20; height++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(18 + height));
+            }
+        }
+        else{
+            for (height = 0; height < 19; height++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(height));
+            }
+
+            for (width = 1; width < 20; width++) {
+                assertEquals(nodeGrid.getNode(width, height), path.get(18 + width));
+            }
+        }
     }
 
     @Test
