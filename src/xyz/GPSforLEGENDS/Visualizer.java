@@ -44,6 +44,10 @@ public class Visualizer {
 
                 if(n.getStatus() == 2) color = Color.BLUE;
 
+                if(n.getPredecessor() != null && n.getPredecessor().getStatus() == 1) color = Color.PINK;
+
+                if(n.getPredecessor() != null && n.getPredecessor().getStatus() == 2) color = Color.CYAN;
+
                 gridImage.setRGB(width,height,color.getRGB());
             }
         }

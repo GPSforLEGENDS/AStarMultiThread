@@ -3,6 +3,7 @@ package xyz.GPSforLEGENDS;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementation of the AStar pathfinding algorithm with up to 2 threads searching
@@ -58,8 +59,9 @@ public class AStar {
 
         //2 threads
         if(parallel){
-            PathWorker workerFromStart = new PathWorker(grid,start,end,true);
-            PathWorker workerFromEnd = new PathWorker(grid,end,start,false);
+            AtomicBoolean foundFlag = new AtomicBoolean(false);
+            PathWorker workerFromStart = new PathWorker(grid,start,end,true, foundFlag);
+            PathWorker workerFromEnd = new PathWorker(grid,end,start,false, foundFlag);
 
             workerFromStart.start();
             workerFromEnd.start();
@@ -87,20 +89,21 @@ public class AStar {
             if(bridgeA != null){
                 path.add(bridgeA);
                 Node current = bridgeA;
-                do{
+
+                while(current.getPredecessor() != null){
                     current = current.getPredecessor();
                     path.add(current);
-                } while(current.getPredecessor() != null);
+                }
 
                 Collections.reverse(path);
 
                 path.add(bridgeB);
                 current = bridgeB;
 
-                do{
+                while(current.getPredecessor() != null){
                     current = current.getPredecessor();
                     path.add(current);
-                } while(current.getPredecessor() != null);
+                }
             }
             else if(end.getPredecessor() != null){
                 //normal backtracking from the end
@@ -113,11 +116,20 @@ public class AStar {
 
                 Collections.reverse(path);
             }
+            else if(start.getPredecessor() != null){
+                path.add(start);
+                Node current = start;
+
+                do{
+                    current = current.getPredecessor();
+                    path.add(current);
+                } while(current.getPredecessor() != null);
+            }
         }
         //run in main thread
         else{
             //setting up the predecessors
-            PathWorker worker = new PathWorker(grid,start,end,true);
+            PathWorker worker = new PathWorker(grid,start,end,true, new AtomicBoolean(false));
             //just call run, since it is one thread anyways;
             worker.run();
 

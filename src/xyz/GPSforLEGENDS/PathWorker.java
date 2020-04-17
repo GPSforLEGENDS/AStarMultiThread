@@ -21,7 +21,7 @@ class PathWorker extends Thread{
     Queue<Node> openList = new PriorityQueue<>(new SortByDistance());
 
     //flag to indicate if one pathfinder found the other
-    private static AtomicBoolean foundFlag = new AtomicBoolean(false);
+    private AtomicBoolean foundFlag;
 
     /**
      * Constructor
@@ -31,12 +31,14 @@ class PathWorker extends Thread{
      * @param endX
      * @param endY
      * @param isStart true if this is the 'real' (which means not the endpoint that is used as the start point for the second pathfinder) start point
+     * @param foundFlag
      */
-    PathWorker(NodeGrid grid, int startX, int startY, int endX, int endY, boolean isStart){
+    PathWorker(NodeGrid grid, int startX, int startY, int endX, int endY, boolean isStart, AtomicBoolean foundFlag){
         this.grid = grid;
         this.startNode = grid.getNode(startX,startY);
         this.endNode = grid.getNode(endX,endY);
         this.isStart = isStart;
+        this.foundFlag = foundFlag;
     }
 
     /**
@@ -45,12 +47,14 @@ class PathWorker extends Thread{
      * @param start
      * @param end
      * @param isStart true if this is the 'real' (which means not the endpoint that is used as the start point for the second pathfinder) start point
+     * @param foundFlag
      */
-    PathWorker(NodeGrid grid, Node start, Node end, boolean isStart){
+    PathWorker(NodeGrid grid, Node start, Node end, boolean isStart, AtomicBoolean foundFlag){
         this.grid = grid;
         this.startNode = start;
         this.endNode = end;
         this.isStart = isStart;
+        this.foundFlag = foundFlag;
     }
 
     public void run(){
@@ -66,10 +70,13 @@ class PathWorker extends Thread{
         openList.add(startNode);
 
         do {
-            if (foundFlag.compareAndSet(false, false)) {
+            if (!foundFlag.get()) {
                 Node currentNode = openList.poll();
                 synchronized (currentNode) {
-                    if (currentNode.equals(endNode)) return;
+                    if (currentNode.equals(endNode)){
+                        foundFlag.set(true);
+                        return;
+                    }
                     //check if the other pathfinder already worked on this node
                     if (currentNode.getStatus() == 1 || currentNode.getStatus() == 2) {
                         if (foundFlag.compareAndSet(false, true)) {
@@ -86,7 +93,9 @@ class PathWorker extends Thread{
                 expandNode(currentNode);
             }
             //stop working if the foundFlag is set
-            else return;
+            else{
+                return;
+            }
         } while (!openList.isEmpty()) ;
 
         noPathFound();
@@ -100,7 +109,7 @@ class PathWorker extends Thread{
     private void expandNode(Node currentNode) {
         for(Node neighbour : currentNode.getNeighbours()){
             //stop working as soon as they found each other
-            if(foundFlag.compareAndSet(false,false)) {
+            if(!foundFlag.get()) {
                 synchronized (neighbour) {
                     if (isStart) {
                         if (neighbour.getStatus() == 1) continue;
@@ -112,16 +121,12 @@ class PathWorker extends Thread{
 
                     if (openList.contains(neighbour) && costToReach >= neighbour.getCostToReach(isStart)) continue;
 
-                    double oldCost = neighbour.getCostToReach(isStart);
-
                     neighbour.setCostToReach(costToReach, isStart);
+                    if(neighbour.getStatus() != 1 && neighbour.getStatus() != 2) neighbour.setPredecessor(currentNode);
 
                     //remove and add since the order might have changed
                     openList.remove(neighbour);
                     openList.add(neighbour);
-
-                    if(neighbour.getStatus() == 1 || neighbour.getStatus() == 2) neighbour.setCostToReach(oldCost,isStart);
-                    else neighbour.setPredecessor(currentNode);
                 }
             }
             //stop working if the foundFlag is set
@@ -184,6 +189,7 @@ class PathWorker extends Thread{
             }
         }
         to.setPredecessor(shortest);
+        //TODO remove debugging
         double x = to.getCostToReach(!isStart);
     }
 
@@ -212,7 +218,7 @@ class PathWorker extends Thread{
      * Comparator for node distance
      * compares the distance of the nodes to the end node
      * distance = current cost to reach node + heuristic cost to reach the end
-     * heuristic cost = air distance between the node end the end
+     * heuristic cost = air distance between the node and the end
      */
     private class SortByDistance implements Comparator<Node>{
 
