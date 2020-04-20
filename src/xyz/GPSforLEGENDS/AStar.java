@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Implementation of the AStar pathfinding algorithm with up to 2 threads searching
  * https://de.wikipedia.org/wiki/A*-Algorithmus
  * parallelisation relies on the assumption that if i want to get from a to c and start searching from a to c and c to a
- * then we can end searching at the point of execution when both meet each other and traceback
+ * then we can end searching at the point of execution when both meet each other and trackback
  */
 public class AStar {
 
@@ -39,6 +39,8 @@ public class AStar {
 
     /**
      * finds the shortest path from start to end.
+     * If you want to call this function a second time, make sure to reset the grid to its original state by calling NodeGrid.reset();
+     * @see NodeGrid#reset()
      * @param startX
      * @param startY
      * @param endX
@@ -66,65 +68,24 @@ public class AStar {
             workerFromStart.start();
             workerFromEnd.start();
 
-            Node bridgeA = null;
-            Node bridgeB = null;
+            Node found = null;
 
             //loop to wait for results
             while(true){
                 if(!workerFromStart.isAlive()){
-                    bridgeA = workerFromStart.getBridgeFrom();
-                    bridgeB = workerFromStart.getBridgeTo();
-                    if(!workerFromEnd.isAlive() && workerFromEnd.getBridgeFrom() == null && bridgeA == null && bridgeB == null) break;
-                    if(bridgeA != null && bridgeB != null) break;
+                    found = workerFromStart.getFound();
+                    if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
+                    if(found != null) break;
                 }
                 if(!workerFromEnd.isAlive()){
-                    bridgeA = workerFromEnd.getBridgeTo();
-                    bridgeB = workerFromEnd.getBridgeFrom();
-                    if(!workerFromStart.isAlive() && workerFromStart.getBridgeFrom() == null && bridgeA == null && bridgeB == null) break;
-                    if(bridgeA != null && bridgeB != null) break;
+                    found = workerFromEnd.getFound();
+                    if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
+                    if(found != null) break;
                 }
             }
 
-            //is there a path?
-            if(bridgeA != null){
-                path.add(bridgeA);
-                Node current = bridgeA;
+            reconstructParallelPath(path, found);
 
-                while(current.getPredecessor() != null){
-                    current = current.getPredecessor();
-                    path.add(current);
-                }
-
-                Collections.reverse(path);
-
-                path.add(bridgeB);
-                current = bridgeB;
-
-                while(current.getPredecessor() != null){
-                    current = current.getPredecessor();
-                    path.add(current);
-                }
-            }
-            else if(end.getPredecessor() != null){
-                //normal backtracking from the end
-                path.add(end);
-                Node current = end;
-                do{
-                    current = current.getPredecessor();
-                    path.add(current);
-                } while(current.getPredecessor() != null);
-
-                Collections.reverse(path);
-            }
-            else if(start.getPredecessor() != null){
-                path.add(start);
-                Node current = start;
-
-                do{
-                    current = current.getPredecessor();
-                    path.add(current);
-                } while(current.getPredecessor() != null);
-            }
         }
         //run in main thread
         else{
@@ -133,19 +94,52 @@ public class AStar {
             //just call run, since it is one thread anyways;
             worker.run();
 
-            //backtracking from end node
-            if(end.getPredecessor() != null){
-                path.add(end);
-                Node current = end;
-                do{
-                    current = current.getPredecessor();
-                    path.add(current);
-                } while(current.getPredecessor() != null);
-            }
-            Collections.reverse(path);
-        }
+            reconstructPath(path, end);
 
+        }
         return path;
+    }
+
+    /**
+     * reconstructs the path by following the predecessors
+     * @param path
+     * @param found
+     */
+    private void reconstructParallelPath(List<Node> path, Node found) {
+        if(found != null){
+            path.add(found);
+            Node current = found.getPredecessor(true);
+
+            while(current != null){
+                path.add(current);
+                current = current.getPredecessor(true);
+            }
+
+            Collections.reverse(path);
+            current = found.getPredecessor(false);
+            while(current != null){
+                path.add(current);
+                current = current.getPredecessor(false);
+            }
+        }
+    }
+
+    /**
+     * basic reconstruction of the path by following the chain of predecessors
+     * @param path the list to save the result in
+     * @param end
+     */
+    private void reconstructPath(List<Node> path, Node end) {
+        //backtracking from end node
+        if(end.getPredecessor(true) != null){
+            path.add(end);
+            Node current = end;
+            do{
+                current = current.getPredecessor(true);
+                path.add(current);
+            } while(current.getPredecessor(true) != null);
+        }
+        Collections.reverse(path);
     }
 
 }
