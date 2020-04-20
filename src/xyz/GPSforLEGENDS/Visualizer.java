@@ -5,20 +5,38 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class Visualizer {
 
     /**
      * safes the grid as an image representation
      * @param grid, not null
-     * @param file the PNG file to safe the image, not null
+     * @param file the png file to safe the image, not null
      */
     public static void safeNodeGridImageToFile(NodeGrid grid, File file){
         if(grid == null || file == null) throw new NullPointerException();
-        BufferedImage gridImage = gridToImage(grid);
+        BufferedImage gridImage = gridToImage(grid, null);
 
         try {
-            ImageIO.write(gridImage,"png",file);
+            ImageIO.write(gridImage, "png", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * safes the grid as an image representation
+     * @param grid, not null
+     * @param file the png file to safe the image, not null
+     * @param path the list containing the path
+     */
+    public static void safeNodeGridImageToFile(NodeGrid grid, File file, List<Node> path){
+        if(grid == null || file == null) throw new NullPointerException();
+        BufferedImage gridImage = gridToImage(grid, path);
+
+        try {
+            ImageIO.write(gridImage, "png", file);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -27,16 +45,18 @@ public class Visualizer {
     /**
      * converts the grid to an BufferedImage
      * @param grid, not null
+     * @param path nullable
      * @return the grid as an BufferedImage
      */
-    private static BufferedImage gridToImage(NodeGrid grid){
+    private static BufferedImage gridToImage(NodeGrid grid, List<Node> path){
         if(grid == null) throw new NullPointerException();
         BufferedImage gridImage = new BufferedImage(grid.getWidth(),grid.getHeight(),BufferedImage.TYPE_INT_RGB);
+        Color color;
 
         for(int height = 0; height < grid.getHeight(); height++){
             for(int width = 0; width < grid.getWidth(); width++){
                 Node n = grid.getNode(width,height);
-                Color color = Color.white;
+                color = Color.white;
 
                 if(!n.isTraversable()) color = Color.BLACK;
 
@@ -44,11 +64,14 @@ public class Visualizer {
 
                 if(n.getStatus() == 2) color = Color.BLUE;
 
-                if(n.getPredecessor() != null && n.getPredecessor().getStatus() == 1) color = Color.PINK;
-
-                if(n.getPredecessor() != null && n.getPredecessor().getStatus() == 2) color = Color.CYAN;
-
                 gridImage.setRGB(width,height,color.getRGB());
+            }
+        }
+
+        if (path != null) {
+            color = Color.GREEN;
+            for (Node pathNode : path) {
+                gridImage.setRGB(pathNode.getX(),pathNode.getY(),color.getRGB());
             }
         }
 
