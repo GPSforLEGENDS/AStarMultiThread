@@ -73,7 +73,6 @@ public class AStar {
             //loop to wait for results
             found = getResultFromPathWorkers(workerFromStart, workerFromEnd);
 
-
             reconstructPath(path, found);
         }
         //run in main thread
@@ -88,18 +87,27 @@ public class AStar {
         return path;
     }
 
+    /**
+     * function that waits for a result from one of the pathfinders
+     * terminates as soon as one of the following statements are true
+     * 1. one pathfinder has found all its reachable nodes and didnt find the other patfinder nor the endnode. This indicates that the endNode cant be reached from the startpoint
+     * 2. one pathfinder found the other pathfinder or the endnode
+     * @param workerFromStart
+     * @param workerFromEnd
+     * @return
+     */
     private Node getResultFromPathWorkers(PathWorker workerFromStart, PathWorker workerFromEnd) {
         Node found = null;
         while(true){
             if(!workerFromStart.isAlive()){
                 found = workerFromStart.getFound();
-                if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
+                //if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
                 if(Double.isNaN(workerFromStart.getStartNode().getCostToReach(true))) break;
                 if(found != null) break;
             }
             if(!workerFromEnd.isAlive()){
                 found = workerFromEnd.getFound();
-                if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
+                //if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
                 if(Double.isNaN(workerFromEnd.getStartNode().getCostToReach(true))) break;
                 if(found != null) break;
             }
