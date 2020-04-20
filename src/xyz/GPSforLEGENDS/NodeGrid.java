@@ -170,5 +170,17 @@ public class NodeGrid {
         return nodeGrid[0].length;
     }
 
+    /**
+     * resets the nodegrid to its original state
+     */
+    public void reset(){
+        for(int row = 0; row < getHeight(); row++){
+            for(int column = 0; column < getWidth(); column++){
+                Node node = getNode(column,row);
+                nodeGrid[column][row] = node;
+            }
+        }
+    }
+
 
 }
