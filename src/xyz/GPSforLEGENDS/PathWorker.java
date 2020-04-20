@@ -145,13 +145,17 @@ class PathWorker extends Thread{
     }
 
     /**
-     * function to reset the successor of start and end node to indicate that no path was found
+     * function to reset the successor of start and end node and set the costs to NAN to indicate that no path was found
      */
     private void noPathFound(){
         startNode.setPredecessor(null, true);
         endNode.setPredecessor(null, true);
         startNode.setPredecessor(null, false);
         endNode.setPredecessor(null, false);
+        startNode.setCostToReach(Double.NaN, true);
+        startNode.setCostToReach(Double.NaN, false);
+        endNode.setCostToReach(Double.NaN, true);
+        endNode.setCostToReach(Double.NaN, false);
     }
 
     /**
@@ -189,5 +193,13 @@ class PathWorker extends Thread{
 
     Node getFound(){
         return this.found;
+    }
+
+    public Node getStartNode(){
+        return this.startNode;
+    }
+
+    public Node getEndNode(){
+        return this.endNode;
     }
 }

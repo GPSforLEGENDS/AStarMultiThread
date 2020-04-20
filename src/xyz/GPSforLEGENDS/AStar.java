@@ -71,18 +71,8 @@ public class AStar {
             Node found = null;
 
             //loop to wait for results
-            while(true){
-                if(!workerFromStart.isAlive()){
-                    found = workerFromStart.getFound();
-                    if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
-                    if(found != null) break;
-                }
-                if(!workerFromEnd.isAlive()){
-                    found = workerFromEnd.getFound();
-                    if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
-                    if(found != null) break;
-                }
-            }
+            found = getResultFromPathWorkers(workerFromStart, workerFromEnd);
+
 
             reconstructParallelPath(path, found);
 
@@ -98,6 +88,26 @@ public class AStar {
 
         }
         return path;
+    }
+
+    private Node getResultFromPathWorkers(PathWorker workerFromStart, PathWorker workerFromEnd) {
+        Node found = null;
+        while(true){
+            if(!workerFromStart.isAlive()){
+                found = workerFromStart.getFound();
+                if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
+                if(Double.isNaN(workerFromStart.getStartNode().getCostToReach(true))) break;
+                if(found != null) break;
+            }
+            if(!workerFromEnd.isAlive()){
+                found = workerFromEnd.getFound();
+                if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
+                if(Double.isNaN(workerFromEnd.getStartNode().getCostToReach(true))) break;
+                if(found != null) break;
+            }
+        }
+
+        return found;
     }
 
     /**
