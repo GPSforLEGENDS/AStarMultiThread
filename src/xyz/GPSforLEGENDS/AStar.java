@@ -74,8 +74,7 @@ public class AStar {
             found = getResultFromPathWorkers(workerFromStart, workerFromEnd);
 
 
-            reconstructParallelPath(path, found);
-
+            reconstructPath(path, found);
         }
         //run in main thread
         else{
@@ -85,7 +84,6 @@ public class AStar {
             worker.run();
 
             reconstructPath(path, end);
-
         }
         return path;
     }
@@ -112,11 +110,11 @@ public class AStar {
 
     /**
      * reconstructs the path by following the predecessors
-     * @param path
-     * @param found
+     * @param path the list to save the result in
+     * @param found the node where backtracking should start
      */
-    private void reconstructParallelPath(List<Node> path, Node found) {
-        if(found != null){
+    private void reconstructPath(List<Node> path, Node found) {
+        if(found != null && !Double.isNaN(found.getCostToReach(true))){
             path.add(found);
             Node current = found.getPredecessor(true);
 
@@ -133,23 +131,4 @@ public class AStar {
             }
         }
     }
-
-    /**
-     * basic reconstruction of the path by following the chain of predecessors
-     * @param path the list to save the result in
-     * @param end
-     */
-    private void reconstructPath(List<Node> path, Node end) {
-        //backtracking from end node
-        if(end.getPredecessor(true) != null){
-            path.add(end);
-            Node current = end;
-            do{
-                current = current.getPredecessor(true);
-                path.add(current);
-            } while(current.getPredecessor(true) != null);
-        }
-        Collections.reverse(path);
-    }
-
 }
