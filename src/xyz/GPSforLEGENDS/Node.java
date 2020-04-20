@@ -11,7 +11,7 @@ public class Node {
     private int y;
     private double[] costToReach = new double[2];
 
-    private Node predecessor;
+    private Node[] predecessor = new Node[2];
 
     private int status;
 
@@ -39,12 +39,13 @@ public class Node {
         return y;
     }
 
-    public Node getPredecessor(){
-        return predecessor;
+    public Node getPredecessor(boolean fromStart){
+        return fromStart ? predecessor[0] : predecessor[1];
     }
 
-    public void setPredecessor(Node n){
-        this.predecessor = n;
+    public void setPredecessor(Node n, boolean fromStart){
+        if(fromStart) this.predecessor[0] = n;
+        else this.predecessor[1] = n;
     }
 
     /**
@@ -89,14 +90,13 @@ public class Node {
         neighbours.remove(node);
     }
 
-    public void setCostToReach(double costToReach, boolean isStart) {
-        if(isStart) this.costToReach[0] = costToReach;
+    public void setCostToReach(double costToReach, boolean fromStart) {
+        if(fromStart) this.costToReach[0] = costToReach;
         else this.costToReach[1] = costToReach;
     }
 
-    public double getCostToReach(boolean isStart) {
-        if(isStart) return this.costToReach[0];
-        else return this.costToReach[1];
+    public double getCostToReach(boolean fromStart) {
+        return fromStart ? costToReach[0] : costToReach[1];
     }
 
     @Override
