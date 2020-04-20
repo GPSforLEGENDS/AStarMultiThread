@@ -177,7 +177,11 @@ public class NodeGrid {
         for(int row = 0; row < getHeight(); row++){
             for(int column = 0; column < getWidth(); column++){
                 Node node = getNode(column,row);
-                nodeGrid[column][row] = node;
+                node.setStatus(0);
+                node.setCostToReach(Double.MAX_VALUE,true);
+                node.setCostToReach(Double.MAX_VALUE,false);
+                node.setPredecessor(null,true);
+                node.setPredecessor(null,false);
             }
         }
     }
