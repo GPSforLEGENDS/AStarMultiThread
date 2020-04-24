@@ -3,9 +3,10 @@ package xyz.GPSforLEGENDS;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class PathWorker extends Thread{
+class PathWorker implements Callable<Node> {
 
     private NodeGrid grid;
 
@@ -59,10 +60,6 @@ class PathWorker extends Thread{
         openList = new PriorityQueue<>(new SortByDistance());
     }
 
-    public void run(){
-        aStarPathfinding();
-    }
-
     /**
      * function that runs the AStar Pathfinding algorithm.
      * Stops when either the end node is found OR if the pathfinder finds a node that is already closed by the other pathfinder (only if parallel is true in AStar)
@@ -72,7 +69,8 @@ class PathWorker extends Thread{
         openList.add(startNode);
 
         do {
-            if (!foundFlag.get()) {
+            //check if the other pathfinder already found the other or if no path can be found
+            if (!foundFlag.get() && !Double.isNaN(startNode.getCostToReach(true))) {
                 Node currentNode = openList.poll();
                 if (currentNode.equals(endNode)) {
                     if (foundFlag.compareAndSet(false, true)) {
@@ -156,6 +154,12 @@ class PathWorker extends Thread{
         startNode.setCostToReach(Double.NaN, false);
         endNode.setCostToReach(Double.NaN, true);
         endNode.setCostToReach(Double.NaN, false);
+    }
+
+    @Override
+    public Node call() throws Exception {
+        aStarPathfinding();
+        return found;
     }
 
     /**

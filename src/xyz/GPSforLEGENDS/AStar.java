@@ -1,8 +1,12 @@
 package xyz.GPSforLEGENDS;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -65,13 +69,18 @@ public class AStar {
             PathWorker workerFromStart = new PathWorker(grid,start,end,true, foundFlag);
             PathWorker workerFromEnd = new PathWorker(grid,end,start,false, foundFlag);
 
-            workerFromStart.start();
-            workerFromEnd.start();
+            ExecutorService pool = Executors.newFixedThreadPool(2);
+
+            try {
+                pool.invokeAll(Arrays.asList(workerFromStart, workerFromEnd), 2, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Node found = null;
 
             //loop to wait for results
-            found = getResultFromPathWorkers(workerFromStart, workerFromEnd);
+            found = getResultFromPathWorkers(pool, workerFromStart, workerFromEnd);
 
             reconstructPath(path, found);
         }
@@ -79,10 +88,13 @@ public class AStar {
         else{
             //setting up the predecessors
             PathWorker worker = new PathWorker(grid,start,end,true, new AtomicBoolean(false));
-            //just call run, since it is one thread anyways;
-            worker.run();
-
-            reconstructPath(path, end);
+            //just call call, since it is one thread anyways;
+            try {
+                worker.call();
+                reconstructPath(path, end);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return path;
     }
@@ -92,26 +104,22 @@ public class AStar {
      * terminates as soon as one of the following statements are true
      * 1. one pathfinder has found all its reachable nodes and didnt find the other patfinder nor the endnode. This indicates that the endNode cant be reached from the startpoint
      * 2. one pathfinder found the other pathfinder or the endnode
+     * 3. timeout (2 minutes)
      * @param workerFromStart
      * @param workerFromEnd
      * @return
      */
-    private Node getResultFromPathWorkers(PathWorker workerFromStart, PathWorker workerFromEnd) {
+    private Node getResultFromPathWorkers(ExecutorService pool, PathWorker workerFromStart, PathWorker workerFromEnd) {
         Node found = null;
-        while(true){
-            if(!workerFromStart.isAlive()){
-                found = workerFromStart.getFound();
-                //if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
-                if(Double.isNaN(workerFromStart.getStartNode().getCostToReach(true))) break;
-                if(found != null) break;
-            }
-            if(!workerFromEnd.isAlive()){
-                found = workerFromEnd.getFound();
-                //if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
-                if(Double.isNaN(workerFromEnd.getStartNode().getCostToReach(true))) break;
-                if(found != null) break;
-            }
-        }
+
+        found = workerFromStart.getFound();
+        //if(!workerFromEnd.isAlive() && workerFromEnd.getFound() == null && found == null) break;
+        if (Double.isNaN(workerFromStart.getStartNode().getCostToReach(true))) return found;
+        if (found != null) return found;
+        found = workerFromEnd.getFound();
+        //if(!workerFromStart.isAlive() && workerFromStart.getFound() == null && found == null) break;
+        if (Double.isNaN(workerFromEnd.getStartNode().getCostToReach(true))) return found;
+        if (found != null) return found;
 
         return found;
     }
