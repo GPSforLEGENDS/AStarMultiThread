@@ -29,7 +29,7 @@ public class Visualizer {
      * safes the grid as an image representation
      * @param grid, not null
      * @param file the png file to safe the image, not null
-     * @param path the list containing the path
+     * @param path the list containing the nodes from start to finish
      */
     public static void safeNodeGridImageToFile(NodeGrid grid, File file, List<Node> path){
         if(grid == null || file == null) throw new NullPointerException();
