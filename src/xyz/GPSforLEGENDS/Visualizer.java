@@ -63,17 +63,17 @@ public class Visualizer {
                 Node n = grid.getNode(width,height);
                 color = Color.white;
 
-                if(!n.isTraversable()) color = Color.BLACK;
-
-                if(n.getStatus() == statusColor && n.getStatus() != 0) color = Color.RED;
-
-                if(n.getStatus() != 0 && n.getStatus() != statusColor) color = Color.BLUE;
-
                 if(statusColor == 0){
                     if(n.getStatus() != 0){
                         statusColor = n.getStatus();
                     }
                 }
+
+                if(!n.isTraversable()) color = Color.BLACK;
+
+                if(n.getStatus() == statusColor && n.getStatus() != 0) color = Color.RED;
+
+                if(n.getStatus() != 0 && n.getStatus() != statusColor) color = Color.BLUE;
 
                 gridImage.setRGB(width,height,color.getRGB());
             }
