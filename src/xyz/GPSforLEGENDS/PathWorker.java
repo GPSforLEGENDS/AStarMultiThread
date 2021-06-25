@@ -2,9 +2,8 @@ package xyz.GPSforLEGENDS;
 
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-class PathWorker implements Callable<List<Node>> {
+class PathWorker implements Callable<Void> {
 
     private NodeGrid grid;
 
@@ -52,32 +51,34 @@ class PathWorker implements Callable<List<Node>> {
      * function that runs the AStar Pathfinding algorithm.
      * Stops when either the end node is found OR if the pathfinder finds a node that is already closed by the other pathfinder (only if parallel is true in AStar)
      */
-    private List<Node> aStarPathfinding() {
+    private void aStarPathfinding() {
         startNode.setCostToReach(0, fromStart);
         openList.add(startNode);
 
         do {
             if(grid.isSolved()){
-                return null;
+                return;
             }
             Node currentNode = openList.poll();
             synchronized (currentNode) {
                 if (currentNode.equals(endNode)) {
                     if(!grid.getAndSetSolved(true)) {
-                        setupPredecessors(currentNode);
-                        currentNode.setStatus(id);
-                        return reconstructPath();
+                        synchronized (grid) {
+                            setupPredecessors(currentNode);
+                            currentNode.setStatus(id);
+                        }
                     }
-                    return null;
+                    return;
                 }
                 //found a node that has been marked by another pathworker
                 if(currentNode.getStatus() != 0 && currentNode.getStatus() != id){
                         if(!grid.getAndSetSolved(true)) {
                             //findAndRepairPredecessors(currentNode);
-                            setupPredecessors(currentNode);
-                            return reconstructPath();
+                            synchronized (grid) {
+                                setupPredecessors(currentNode);
+                            }
                         }
-                        return null;
+                        return;
                 }
 
                 //setting the status
@@ -88,7 +89,7 @@ class PathWorker implements Callable<List<Node>> {
 
         } while (!openList.isEmpty());
         noPathFound();
-        return null;
+        return;
     }
 
     private List<Node> reconstructPath() {
@@ -180,20 +181,25 @@ class PathWorker implements Callable<List<Node>> {
      * function to reset the successor of start and end node and set the costs to NAN to indicate that no path was found
      */
     private void noPathFound() {
-        startNode.setPredecessor(null, true);
-        startNode.setPredecessor(null, false);
-        endNode.setPredecessor(null, true);
-        endNode.setPredecessor(null, false);
-        startNode.setCostToReach(Double.NaN, true);
-        startNode.setCostToReach(Double.NaN, false);
-        endNode.setCostToReach(Double.NaN, true);
-        endNode.setCostToReach(Double.NaN, false);
+        synchronized (grid) {
+            if(!grid.isSolved()) {
+                startNode.setPredecessor(null, true);
+                startNode.setPredecessor(null, false);
+                endNode.setPredecessor(null, true);
+                endNode.setPredecessor(null, false);
+                startNode.setCostToReach(Double.NaN, true);
+                startNode.setCostToReach(Double.NaN, false);
+                endNode.setCostToReach(Double.NaN, true);
+                endNode.setCostToReach(Double.NaN, false);
+            }
+        }
     }
 
     @Override
-    public List<Node> call() throws Exception {
+    public Void call() throws Exception {
         id = Thread.currentThread().getId();
-        return aStarPathfinding();
+        aStarPathfinding();
+        return null;
     }
 
     /**
