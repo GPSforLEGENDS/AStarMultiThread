@@ -60,7 +60,6 @@ class PathWorker implements Callable<Void> {
                 return;
             }
             Node currentNode = openList.poll();
-            synchronized (currentNode) {
                 if (currentNode.equals(endNode)) {
                     if(!grid.getAndSetSolved(true)) {
                         synchronized (grid) {
@@ -83,37 +82,13 @@ class PathWorker implements Callable<Void> {
 
                 //setting the status
                 currentNode.setStatus(id);
-            }
+
             //explore neighbours
             expandNode(currentNode);
 
         } while (!openList.isEmpty());
         noPathFound();
         return;
-    }
-
-    private List<Node> reconstructPath() {
-
-        //check if path exist
-        if(Double.isNaN(startNode.getCostToReach(true)) || Double.isNaN(endNode.getCostToReach(true))){
-            return null;
-        }
-
-        List<Node> path = new ArrayList<>();
-        Node originalStartNode = fromStart ? startNode : endNode;
-
-        Node current = fromStart ? endNode : startNode;
-        while(current != null){
-            path.add(current);
-            current = current.getPredecessor(true);
-        }
-
-        //reverse list if we tracked back from end to start
-        if(path.get(0) != originalStartNode){
-            Collections.reverse(path);
-        }
-
-        return path;
     }
 
     /**
@@ -242,34 +217,5 @@ class PathWorker implements Callable<Void> {
 
     public Node getEndNode() {
         return this.endNode;
-    }
-
-    private boolean isCorrectPath(){
-        List<Node> correctPath = new ArrayList<>();
-        correctPath.add(grid.getNode(0,0));
-        correctPath.add(grid.getNode(19,19));
-        for(int w = 1; w < 19; w++){
-            correctPath.add(grid.getNode(w, 0));
-            correctPath.add(grid.getNode(w, 19));
-        }
-        for(int h = 1; h < 19; h++){
-            correctPath.add(grid.getNode(0, h));
-            correctPath.add(grid.getNode(19, h));
-        }
-
-        Node current = grid.getNode(19,19);
-        System.out.println("Teste auf richtigen Pfad");
-        while(current != null){
-            if(!correctPath.contains(current)) return false;
-            System.out.println(current.getX() + " " + current.getY());
-            current = current.getPredecessor(true);
-        }
-
-        List<Node> path = reconstructPath();
-        for(Node node : path){
-            if(!correctPath.contains(node)) return false;
-        }
-
-        return true;
     }
 }

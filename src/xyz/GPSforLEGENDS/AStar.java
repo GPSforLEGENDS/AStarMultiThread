@@ -65,9 +65,8 @@ public class AStar {
             PathWorker workerFromEnd = new PathWorker(grid,end,start, false);
 
             ExecutorService pool = Executors.newFixedThreadPool(2);
-            List<Future<Void>> results = null;
             try {
-                results = pool.invokeAll(Arrays.asList(workerFromStart, workerFromEnd), 60, TimeUnit.MINUTES);
+                pool.invokeAll(Arrays.asList(workerFromStart, workerFromEnd), 60, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

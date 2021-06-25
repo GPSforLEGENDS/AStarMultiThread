@@ -166,7 +166,6 @@ class AStarTest {
         NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/midLine.png")));
 
         for (int i = 0; i < 10000; i++) {
-            System.out.println("Test: " + i);
             AStar aStar = new AStar(nodeGrid, true);
 
             List<Node> path = aStar.findPath(0, 0, 19, 19);
