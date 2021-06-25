@@ -1,25 +1,29 @@
 package xyz.GPSforLEGENDS;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NodeGrid {
 
     // x and y
-    private Node[][] nodeGrid;
+    private final Node[][] nodeGrid;
+
+    private AtomicBoolean isSolved = new AtomicBoolean(false);
+
 
     /**
      * constructor
      * initialize the nodegrid and fills it with the nodes
      * all pixel != white are considered to be not traversable
      * @param image the image that is used to create the grid from. The dimension has to be atleast 2x2. Not null
-     * @exception IllegalArgumentException if the height or width of the image are not atleast 2
      * @exception NullPointerException if the image is null
      */
     public NodeGrid(BufferedImage image){
 
         if(image == null) throw new NullPointerException("BufferedImage image cant be null");
-
-        if(image.getWidth() < 2 || image.getHeight() < 2) throw new IllegalArgumentException("The Dimension of the image has to be atleast 2x2");
 
         nodeGrid = new Node[image.getWidth()][image.getHeight()];
 
@@ -178,13 +182,21 @@ public class NodeGrid {
             for(int column = 0; column < getWidth(); column++){
                 Node node = getNode(column,row);
                 node.setStatus(0);
-                node.setCostToReach(Double.MAX_VALUE,true);
-                node.setCostToReach(Double.MAX_VALUE,false);
-                node.setPredecessor(null,true);
-                node.setPredecessor(null,false);
+                node.setCostToReach(Double.MAX_VALUE, true);
+                node.setCostToReach(Double.MAX_VALUE, false);
+                node.setPredecessor(null, true);
+                node.setPredecessor(null, false);
+                isSolved.set(false);
             }
         }
     }
 
+    public boolean isSolved(){
+        return this.isSolved.get();
+    }
+
+    boolean getAndSetSolved(boolean solved){
+        return this.isSolved.getAndSet(solved);
+    }
 
 }

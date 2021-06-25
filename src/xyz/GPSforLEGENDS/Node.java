@@ -9,11 +9,11 @@ public class Node {
 
     private int x;
     private int y;
-    private double[] costToReach = new double[2];
+    private double[] costToReach = {Double.MAX_VALUE, Double.MAX_VALUE};
 
     private Node[] predecessor = new Node[2];
 
-    private int status;
+    private long status;
 
     private List<Node> neighbours;
 
@@ -23,8 +23,6 @@ public class Node {
         this.y = y;
         //a pixel can be surrounded by a maximum of 8 others
         neighbours = new ArrayList<>(8);
-        costToReach[0] = Double.MAX_VALUE;
-        costToReach[1] = Double.MAX_VALUE;
     }
 
     public boolean isTraversable() {
@@ -40,12 +38,11 @@ public class Node {
     }
 
     public Node getPredecessor(boolean fromStart){
-        return fromStart ? predecessor[0] : predecessor[1];
+        return predecessor[fromStart ? 0 : 1];
     }
 
     public void setPredecessor(Node n, boolean fromStart){
-        if(fromStart) this.predecessor[0] = n;
-        else this.predecessor[1] = n;
+        this.predecessor[fromStart ? 0 : 1] = n;
     }
 
     /**
@@ -55,7 +52,7 @@ public class Node {
      * 2 = explored from endpoint
      * @return
      */
-    public int getStatus() {
+    public long getStatus() {
         return status;
     }
 
@@ -66,7 +63,7 @@ public class Node {
      * 2 = explored from endpoint<br>
      * @return
      */
-    public void setStatus(int status) {
+    public void setStatus(long status) {
         this.status = status;
     }
 
@@ -91,12 +88,11 @@ public class Node {
     }
 
     public void setCostToReach(double costToReach, boolean fromStart) {
-        if(fromStart) this.costToReach[0] = costToReach;
-        else this.costToReach[1] = costToReach;
+        this.costToReach[fromStart ? 0 : 1] = costToReach;
     }
 
     public double getCostToReach(boolean fromStart) {
-        return fromStart ? costToReach[0] : costToReach[1];
+        return costToReach[fromStart ? 0 : 1];
     }
 
     @Override

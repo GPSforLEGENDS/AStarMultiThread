@@ -1,6 +1,7 @@
 package xyz.GPSforLEGENDS;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -15,14 +16,7 @@ public class Visualizer {
      * @param file the png file to safe the image, not null
      */
     public static void safeNodeGridImageToFile(NodeGrid grid, File file){
-        if(grid == null || file == null) throw new NullPointerException();
-        BufferedImage gridImage = gridToImage(grid, null);
-
-        try {
-            ImageIO.write(gridImage, "png", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        safeNodeGridImageToFile(grid, file, null);
     }
 
     /**
@@ -42,6 +36,15 @@ public class Visualizer {
         }
     }
 
+
+    public static void showNodeGrid(NodeGrid grid, List<Node> path){
+        BufferedImage gridImage = gridToImage(grid, path);
+
+        ImageIcon icon = new ImageIcon(gridImage);
+        JLabel label = new JLabel(icon);
+        JOptionPane.showMessageDialog(null, label);
+    }
+
     /**
      * converts the grid to an BufferedImage
      * @param grid, not null
@@ -53,6 +56,8 @@ public class Visualizer {
         BufferedImage gridImage = new BufferedImage(grid.getWidth(),grid.getHeight(),BufferedImage.TYPE_INT_RGB);
         Color color;
 
+        long statusColor = 0;
+
         for(int height = 0; height < grid.getHeight(); height++){
             for(int width = 0; width < grid.getWidth(); width++){
                 Node n = grid.getNode(width,height);
@@ -60,9 +65,15 @@ public class Visualizer {
 
                 if(!n.isTraversable()) color = Color.BLACK;
 
-                if(n.getStatus() == 1) color = Color.RED;
+                if(n.getStatus() == statusColor && n.getStatus() != 0) color = Color.RED;
 
-                if(n.getStatus() == 2) color = Color.BLUE;
+                if(n.getStatus() != 0 && n.getStatus() != statusColor) color = Color.BLUE;
+
+                if(statusColor == 0){
+                    if(n.getStatus() != 0){
+                        statusColor = n.getStatus();
+                    }
+                }
 
                 gridImage.setRGB(width,height,color.getRGB());
             }

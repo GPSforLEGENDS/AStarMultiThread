@@ -3,6 +3,7 @@ package xyz.GPSforLEGENDS;
 import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -86,7 +87,7 @@ class AStarTest {
 
         List<Node> path = aStar.findPath(0, 0, 19, 19);
 
-        assertTrue(path.isEmpty());
+        assertTrue(path == null);
     }
 
     @Test
@@ -164,11 +165,13 @@ class AStarTest {
     void findPathMultiThreadOnMidLineGridStress() throws IOException {
         NodeGrid nodeGrid = new NodeGrid(ImageIO.read(NodeGridTest.class.getResourceAsStream("resources/midLine.png")));
 
-        for (int i = 0; i < 2000; i++) {
-
+        for (int i = 0; i < 10000; i++) {
+            System.out.println("Test: " + i);
             AStar aStar = new AStar(nodeGrid, true);
 
             List<Node> path = aStar.findPath(0, 0, 19, 19);
+
+            Visualizer.safeNodeGridImageToFile(nodeGrid, new File("lol.png"));
 
             assertEquals(38, path.size(), "attempt: " + i);
 
@@ -257,7 +260,7 @@ class AStarTest {
         AStar aStar = new AStar(nodeGrid, true);
 
         List<Node> path = aStar.findPath(1100, 50, 1000, 2700);
-
+        Visualizer.safeNodeGridImageToFile(nodeGrid, new File("test.png"), path);
         //TODO make the test more accurate
         assertTrue(!path.isEmpty());
     }
