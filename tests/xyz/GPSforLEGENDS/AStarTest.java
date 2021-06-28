@@ -170,8 +170,6 @@ class AStarTest {
 
             List<Node> path = aStar.findPath(0, 0, 19, 19);
 
-            Visualizer.safeNodeGridImageToFile(nodeGrid, new File("lol.png"));
-
             assertEquals(38, path.size(), "attempt: " + i);
 
             int width = 0;
