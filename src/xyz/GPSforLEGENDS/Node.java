@@ -48,8 +48,7 @@ public class Node {
     /**
      * getter for the status
      * 0 = not explored
-     * 1 = explored from start point
-     * 2 = explored from endpoint
+     * NOT 0 = Thread id of the pathworker that explored the node
      * @return
      */
     public long getStatus() {
@@ -57,10 +56,9 @@ public class Node {
     }
 
     /**
-     * setter for the status<br>
-     * 0 = not explored<br>
-     * 1 = explored from start point<br>
-     * 2 = explored from endpoint<br>
+     * setter for the status
+     * 0 = not explored
+     * NOT 0 = Thread id of the pathworker that explored the node
      * @return
      */
     public void setStatus(long status) {
@@ -87,10 +85,20 @@ public class Node {
         neighbours.remove(node);
     }
 
+    /**
+     * sets the cost to reach either from the start or end node
+     * @param costToReach
+     * @param fromStart
+     */
     public void setCostToReach(double costToReach, boolean fromStart) {
         this.costToReach[fromStart ? 0 : 1] = costToReach;
     }
 
+    /**
+     * gets the cost to reach either from the start or end point
+     * @param fromStart
+     * @return
+     */
     public double getCostToReach(boolean fromStart) {
         return costToReach[fromStart ? 0 : 1];
     }
