@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementation of the AStar pathfinding algorithm with up to 2 threads searching
@@ -53,51 +52,54 @@ public class AStar {
         Node start = grid.getNode(startX,startY);
         Node end = grid.getNode(endX,endY);
 
-        List<Node> path = new ArrayList<>();
-
         if(start == null || end == null) throw new IllegalArgumentException("The start or end coordinates are outside of the grid");
 
         if(!start.isTraversable() || !end.isTraversable()) throw new IllegalArgumentException("The start or end node is not traversable");
 
         //2 threads
         if(parallel){
-            PathWorker workerFromStart = new PathWorker(grid,start,end, true);
-            PathWorker workerFromEnd = new PathWorker(grid,end,start, false);
-
-            ExecutorService pool = Executors.newFixedThreadPool(2);
-            try {
-                pool.invokeAll(Arrays.asList(workerFromStart, workerFromEnd), 60, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            pool.shutdown();
-
-            path = reconstructPath(start, end);
-
-            return path;
+            parallelPathworkerSearch(start, end);
+            return reconstructPath(start, end);
         }
         //one thread
         else{
-            //setting up the predecessors
-            PathWorker worker = new PathWorker(grid,start,end, true);
-            //just call call, since it is one thread anyways;
-            try {
-                worker.call();
-                return reconstructPath(start, end);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            pathworkerSearch(start, end);
+            return reconstructPath(start, end);
         }
-        return path;
+    }
+
+    private void pathworkerSearch(Node start, Node end) {
+        //setting up the predecessors
+        PathWorker worker = new PathWorker(grid, start, end, true);
+        //just call call, since it is one thread anyways;
+        try {
+            worker.call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void parallelPathworkerSearch(Node start, Node end) {
+        PathWorker workerFromStart = new PathWorker(grid, start, end, true);
+        PathWorker workerFromEnd = new PathWorker(grid, end, start, false);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            pool.invokeAll(Arrays.asList(workerFromStart, workerFromEnd), 60, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        pool.shutdown();
     }
 
     /**
-     * reconstructs the path by following the predecessors. returns null if no path was found
+     * reconstructs the path by following the predecessors. The trackback starts at the end node.
+     * returns null if no path was found
      * @param start
      * @param end
      * @return list with the nodes from start to end. null if no path was found
      */
-    public List<Node> reconstructPath(Node start, Node end) {
+    private List<Node> reconstructPath(Node start, Node end) {
 
         //check if path exist
         if(Double.isNaN(start.getCostToReach(true)) || Double.isNaN(end.getCostToReach(true))){
